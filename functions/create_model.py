@@ -1,4 +1,4 @@
-from topo_cell_seg.swinunet_transform.swinunet import SwinUnet
+from swinunet_transform.swinunet import SwinUnet
 import torch
 from torchinfo import summary
 

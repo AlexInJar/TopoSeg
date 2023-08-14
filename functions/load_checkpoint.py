@@ -1,5 +1,5 @@
 import torch
-from topo_cell_seg.util.pos_embed import interpolate_pos_embed
+from util.pos_embed import interpolate_pos_embed
 
 def load_checkpoint(net, CHECKPOINT_PATH):
     print("Loading pre-trained checkpoint from: %s" % CHECKPOINT_PATH)

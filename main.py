@@ -1,20 +1,17 @@
-# -*- coding: utf-8 -*-
-
-# Importing the necessary libraries and functions
 import json
+import os
 from datetime import datetime
 from torch.utils.tensorboard import SummaryWriter
-from topo_cell_seg.util.misc import NativeScalerWithGradNormCount as NativeScaler
-from topo_cell_seg.functions.tp_loss import topo_loss
-from topo_cell_seg.param_config.param_config import *
-from topo_cell_seg.functions.save_model import save_model
-from topo_cell_seg.functions.train_one_epoch import train_one_epoch
-from topo_cell_seg.functions.evaluate import evaluate
-from topo_cell_seg.functions.create_optimizer import create_optimizer
-from topo_cell_seg.functions.load_data import load_data
-from topo_cell_seg.functions.create_model import create_model
-from topo_cell_seg.functions.load_checkpoint import load_checkpoint
-
+from util.misc import NativeScalerWithGradNormCount as NativeScaler
+from functions.loss import loss
+from param_config.param_config import *
+from functions.save_model import save_model
+from functions.train_one_epoch import train_one_epoch
+from functions.evaluate import evaluate
+from functions.create_optimizer import create_optimizer
+from functions.load_data import load_data
+from functions.create_model import create_model
+from functions.load_checkpoint import load_checkpoint
 
 # This function creates a new directory for storing the output of the experiments.
 def prepare_directory():
@@ -29,8 +26,10 @@ def save_config(out_dir):
         f.write(json.dumps(config_dic) + "\n")
 
 # This function trains and evaluates the model.
-def train_and_evaluate(out_dir, net, optimizer, device, data_loader_train, data_loader_val, EPOCH_NUM, COMP_TOP, checkpoint_number, USE_CHECKPOINT):
-    criterion = topo_loss(comp_top=COMP_TOP)    # Defining the loss function
+#{1
+def train_and_evaluate(out_dir, net, optimizer, device, data_loader_train, data_loader_val, EPOCH_NUM, COMP_TOP, COMP_CNCT, COMP_TAE, TAU):
+    criterion = loss(comp_top=COMP_TOP, comp_cnct=COMP_CNCT,comp_tae=COMP_TAE, tau=TAU)    # Defining the loss function
+#1}
     loss_scaler = NativeScaler()  # Defining the loss scaler
     unique_subdir = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 
@@ -62,15 +61,28 @@ def train_and_evaluate(out_dir, net, optimizer, device, data_loader_train, data_
             'n_parameters': n_parameters
         }
         # Write the stats to the tensorboard
+        #{
+        # log_writer.add_scalars("Losses", {
+        #     'val/val_loss': test_stats['loss'],
+        #     'val/mse_loss': test_stats['mse'],
+        #     'val/mmt_loss': test_stats['mmt'],
+        #     'train/train_loss': train_stats['loss'],
+        #     'train/mse_loss': train_stats['mse'],
+        #     'train/mmt_loss': train_stats['mmt']
+        # }, epoch)
         log_writer.add_scalars("Losses", {
             'val/val_loss': test_stats['loss'],
-            'val/mse_loss': test_stats['mse'],
-            'val/mmt_loss': test_stats['mmt'],
+            'val/reconst_loss': test_stats['reconst'],
+            'val/topo_loss': test_stats['topo'],
+            'val/tae_loss': test_stats['tae'],
+            'val/cnct_loss': test_stats['cnct'],
             'train/train_loss': train_stats['loss'],
-            'train/mse_loss': train_stats['mse'],
-            'train/mmt_loss': train_stats['mmt']
+            'train/reconst_loss': train_stats['reconst'],
+            'train/topo_loss': train_stats['topo'],
+            'train/tae_loss': train_stats['tae'],
+            'train/cnct_loss': train_stats['cnct'],
         }, epoch)
-        
+        #}
         log_writer.flush()
         # Write the stats to a log file
         with open(os.path.join(out_dir, "log.txt"), mode="a", encoding="utf-8") as f:
@@ -93,7 +105,7 @@ def main():
 
     optimizer = create_optimizer(net)  # Creating the optimizer 
     save_config(out_dir)  # Saving the model's config
-    train_and_evaluate(out_dir, net, optimizer, device, data_loader_train, data_loader_val, EPOCH_NUM, COMP_TOP, checkpoint_number, USE_CHECKPOINT) # Training and evaluating the model
+    train_and_evaluate(out_dir, net, optimizer, device, data_loader_train, data_loader_val, EPOCH_NUM, COMP_TOP, COMP_CNCT, COMP_TAE, TAU)
 
 # If the script is run directly, call the main function
 if __name__ == "__main__":

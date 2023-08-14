@@ -16,7 +16,7 @@ import numpy as np
 from torch.nn import CrossEntropyLoss, Dropout, Softmax, Linear, Conv2d, LayerNorm, Sigmoid
 from torch.nn.modules.utils import _pair
 from scipy import ndimage
-from topo_cell_seg.swinunet_transform.swinublock import SwinTransformerSys
+from .swinublock import SwinTransformerSys
 
 logger = logging.getLogger(__name__)
 
@@ -37,9 +37,13 @@ class SwinUnet(nn.Module):
     def forward(self, x):
         if x.size()[1] == 1:
             x = x.repeat(1,3,1,1)
-        logits = self.swin_unet(x)
+        #{
+        logits, latent = self.swin_unet(x)
+        #}
         innerdis  = self.pred_head(logits)
-        return innerdis
+        #{
+        return innerdis, latent
+        #}
 
     def load_from(self, config):
         pretrained_path = config.MODEL.PRETRAIN_CKPT

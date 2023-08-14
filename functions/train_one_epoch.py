@@ -1,7 +1,7 @@
 import torch
-from topo_cell_seg.util import misc
+from util import misc
 from timm.data import Mixup
-from topo_cell_seg.functions.adjust_learning_rate import adjust_learning_rate
+from functions.adjust_learning_rate import adjust_learning_rate
 import sys
 import math
 from typing import Iterable, Optional
@@ -15,8 +15,12 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
     model.train(True)
     metric_logger = misc.MetricLogger(delimiter="  ")
     metric_logger.add_meter('lr', misc.SmoothedValue(window_size=1, fmt='{value:.6f}'))
-    metric_logger.add_meter('mse', misc.SmoothedValue(window_size=1, fmt='{value:.6f}'))
-    metric_logger.add_meter('mmt', misc.SmoothedValue(window_size=1, fmt='{value:.6f}'))
+    #{
+    metric_logger.add_meter('reconst', misc.SmoothedValue(window_size=1, fmt='{value:.6f}'))
+    metric_logger.add_meter('topo', misc.SmoothedValue(window_size=1, fmt='{value:.6f}'))
+    metric_logger.add_meter('tae', misc.SmoothedValue(window_size=1, fmt='{value:.6f}'))
+    metric_logger.add_meter('cnct', misc.SmoothedValue(window_size=1, fmt='{value:.6f}'))
+    #}
     header = 'Epoch: [{}]'.format(epoch)
     print_freq = 20
 
@@ -46,8 +50,10 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
             samples, targets = mixup_fn(samples, targets)
 
         with torch.cuda.amp.autocast():
-            outputs = model(samples)
-            loss, mse_v, mmt_v = criterion(outputs, targets)
+            #{1
+            outputs,latent = model(samples)
+            loss, reconst_v, topo_v, tae_v, cnct_v = criterion(outputs, samples, latent, targets)
+            #1}
 
         loss_value = loss.item()
 
@@ -63,10 +69,13 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
             optimizer.zero_grad()
 
         torch.cuda.synchronize()
-
+         #{1
         metric_logger.update(loss=loss_value)
-        metric_logger.update(mse=mse_v)
-        metric_logger.update(mmt=mmt_v)
+        metric_logger.update(reconst=reconst_v)
+        metric_logger.update(topo=topo_v)
+        metric_logger.update(tae=tae_v)
+        metric_logger.update(cnct=cnct_v)
+        #1}
 
         min_lr = 10.
         max_lr = 0.
@@ -78,8 +87,12 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
         metric_logger.update(lr=max_lr)
 
         loss_value_reduce = misc.all_reduce_mean(loss_value)
-        mse_reduce = misc.all_reduce_mean(mse_v)
-        mmt_reduce = misc.all_reduce_mean(mmt_v)
+        #{1
+        reconst_reduce = misc.all_reduce_mean(reconst_v)
+        topo_reduce = misc.all_reduce_mean(topo_v)
+        tae_reduce = misc.all_reduce_mean(tae_v)
+        cnct_reduce = misc.all_reduce_mean(cnct_v)
+        #1}
 
         if log_writer is not None and (data_iter_step + 1) % accum_iter == 0:
             """ We use epoch_1000x as the x-axis in tensorboard.

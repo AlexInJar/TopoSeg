@@ -1,5 +1,5 @@
-from topo_cell_seg.param_config.param_config import *
-from topo_cell_seg.swinunet_transform.tissuenetdata import SeprtSeg
+from param_config.param_config import *
+from swinunet_transform.tissuenetdata import SeprtSeg
 import torch
 
 def load_data():

@@ -735,11 +735,14 @@ class SwinTransformerSys(nn.Module):
         return x
 
     def forward(self, x):
-        x, x_downsample = self.forward_features(x)
-        x = self.forward_up_features(x,x_downsample)
+        #{
+        latent, latent_downsample = self.forward_features(x)
+        #}
+        x = self.forward_up_features(latent,latent_downsample)
         x = self.up_x4(x)
-
-        return x
+        #{
+        return x, latent
+        #}
 
     def flops(self):
         flops = 0

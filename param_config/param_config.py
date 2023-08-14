@@ -5,6 +5,9 @@ USE_CHECKPOINT = ast.literal_eval(os.getenv('USE_CHECKPOINT'))  # Set this varia
 CHECKPOINT_PATH = os.getenv('CHECKPOINT_PATH')
 EPOCH_NUM = int(os.getenv('EPOCH_NUM'))
 COMP_TOP = ast.literal_eval(os.getenv('COMP_TOP'))
+COMP_CNCT = ast.literal_eval(os.getenv('COMP_CNCT'))
+COMP_TAE = ast.literal_eval(os.getenv('COMP_TAE'))
+TAU = float(os.getenv('TAU'))
 
 lr = 1e-3* 32/256
 min_lr = 1e-6

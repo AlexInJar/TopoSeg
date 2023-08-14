@@ -1,5 +1,5 @@
 import torch
-from topo_cell_seg.util import misc
+from util import misc
 
 @torch.no_grad()
 def evaluate(data_loader,criterion, model, device):

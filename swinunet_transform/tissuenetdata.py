@@ -3,7 +3,7 @@ import torch
 import numpy as np
 import json
 from torch.utils.data import Dataset, DataLoader
-from topo_cell_seg.swinunet_transform.nptransform import ToTensor, RandomHorizontalFlip, RandomVerticalFlip
+from .nptransform import ToTensor, RandomHorizontalFlip, RandomVerticalFlip
 
 class TsnDataset(Dataset):
     """TissueNet DataSet object."""

@@ -1,5 +1,5 @@
-from topo_cell_seg.functions.get_layer_id_for_vit import get_layer_id_for_vit
-from topo_cell_seg.param_config.param_config import *
+from functions.get_layer_id_for_vit import get_layer_id_for_vit
+from param_config.param_config import *
 import torch
 
 def param_groups_lrd(model, weight_decay, no_weight_decay_list, layer_decay):

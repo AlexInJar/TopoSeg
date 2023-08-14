@@ -1,5 +1,5 @@
 import math
-from topo_cell_seg.param_config.param_config import *
+from param_config.param_config import *
 
 def adjust_learning_rate(optimizer, epoch, num_epochs=250, warmup_epochs=10, lr=lr, min_lr=min_lr):
     """Decay the learning rate with half-cycle cosine after warmup"""

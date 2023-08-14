@@ -1,6 +1,6 @@
 import sys
 from pathlib import Path
-from topo_cell_seg.functions.save_on_master import save_on_master
+from functions.save_on_master import save_on_master
 import re
 
 def save_model(output_dirnm, epoch, model, model_without_ddp, optimizer, loss_scaler):
