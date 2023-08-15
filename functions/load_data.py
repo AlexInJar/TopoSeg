@@ -3,8 +3,8 @@ from swinunet_transform.tissuenetdata import SeprtSeg
 import torch
 
 def load_data():
-    dataset_train = SeprtSeg(root_dir = '../imgs/train')
-    dataset_val = SeprtSeg(root_dir = '../imgs/val')
+    dataset_train = SeprtSeg(root_dir = '/data1/temirlan/imgs/train')
+    dataset_val = SeprtSeg(root_dir = '/data1/temirlan/imgs/val')
     data_loader_train = torch.utils.data.DataLoader(
         dataset_train, shuffle=True,
         batch_size=batch_size,

@@ -16,7 +16,7 @@ from functions.load_checkpoint import load_checkpoint
 # This function creates a new directory for storing the output of the experiments.
 def prepare_directory():
     # Get current date and time
-    out_dir = f'../experiments/{input("Enter Direction To Save ->>> ")}'  # Format as 'mm_dd_yyyy_HH_MM_SS'
+    out_dir = f'/data1/temirlan/experiments/{input("Enter Direction To Save ->>> ")}'  # Format as 'mm_dd_yyyy_HH_MM_SS'
     os.makedirs(out_dir, exist_ok=True)
     return out_dir
 
@@ -27,8 +27,8 @@ def save_config(out_dir):
 
 # This function trains and evaluates the model.
 #{1
-def train_and_evaluate(out_dir, net, optimizer, device, data_loader_train, data_loader_val, EPOCH_NUM, COMP_TOP, COMP_CNCT, COMP_TAE, TAU):
-    criterion = loss(comp_top=COMP_TOP, comp_cnct=COMP_CNCT,comp_tae=COMP_TAE, tau=TAU)    # Defining the loss function
+def train_and_evaluate(out_dir, net, optimizer, device, data_loader_train, data_loader_val, EPOCH_NUM, COMP_TOP, COMP_CNCT, COMP_TAE, TAU, checkpoint_number):
+    criterion = loss(comp_top=COMP_TOP, comp_cnct=COMP_CNCT,comp_tae=COMP_TAE, tau=TAU, lmda=lmda1, lmda2=lmda2, lmda3=lmda3)    # Defining the loss function
 #1}
     loss_scaler = NativeScaler()  # Defining the loss scaler
     unique_subdir = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
@@ -105,7 +105,7 @@ def main():
 
     optimizer = create_optimizer(net)  # Creating the optimizer 
     save_config(out_dir)  # Saving the model's config
-    train_and_evaluate(out_dir, net, optimizer, device, data_loader_train, data_loader_val, EPOCH_NUM, COMP_TOP, COMP_CNCT, COMP_TAE, TAU)
+    train_and_evaluate(out_dir, net, optimizer, device, data_loader_train, data_loader_val, EPOCH_NUM, COMP_TOP, COMP_CNCT, COMP_TAE, TAU, checkpoint_number)
 
 # If the script is run directly, call the main function
 if __name__ == "__main__":

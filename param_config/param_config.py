@@ -13,6 +13,10 @@ lr = 1e-3* 32/256
 min_lr = 1e-6
 weight_decay = 0.05
 layer_decay = 0.75
+lmda1 = 5e-2 #topo_loss
+lmda2 = 2*10**(-4) #tae_loss
+lmda3 = 8.77*10**(-7) #conn_loss
+
 
 batch_size = 8
 num_workers = 10
@@ -23,5 +27,8 @@ config_dic = {
     'lr' : 1e-3* 32/256,
     'min_lr' : 1e-6,
     'weight_decay' : 0.05,
-    'layer_decay' : 0.75
+    'layer_decay' : 0.75,
+    'topo_loss' : lmda1,
+    'tae_loss' : lmda2,
+    'conn_loss' : lmda3
 }
