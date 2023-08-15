@@ -13,8 +13,8 @@ lr = 1e-3* 32/256
 min_lr = 1e-6
 weight_decay = 0.05
 layer_decay = 0.75
-lmda1 = 5e-2 #topo_loss
-lmda2 = 2*10**(-4) #tae_loss
+lmda1 = 5e-1 #topo_loss
+lmda2 = 2e-5 #tae_loss
 lmda3 = 8.77e-7 #conn_loss
 
 
