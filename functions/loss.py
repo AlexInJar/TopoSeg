@@ -445,12 +445,13 @@ class loss(nn.Module):
         topo_loss = self.topo_loss(outs, targets) if self.comp_top else 0
         cnct_loss = self.cnct_loss(outs, targets) if self.comp_cnct else 0
         # topo_loss = torch.tensor([0]).to(device=device)
-
+        
+      
         return (reconst_loss + self.lmda * topo_loss + self.lmda2 * tae_loss + self.lmda3 * cnct_loss,
                 reconst_loss.item(),
-                topo_loss,
-                tae_loss,
-                cnct_loss
+                self.lmda*topo_loss,
+                self.lmda2*tae_loss,
+                self.lmda3*cnct_loss
                 )
 
 
