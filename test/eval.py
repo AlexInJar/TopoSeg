@@ -6,6 +6,9 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
+import gudhi as gd
+from ripser import ripser
+from scipy import sparse
 
 
 def load_predictions_and_labels():
@@ -106,13 +109,13 @@ def save_results_to_file(df_nuc, stats_df, directory):
     print(f'Results saved to {nuc_file} and {stats_file}')
 
 
-def save_plot_to_file(nuc_pred, y_true, directory):
+def save_plot_to_file(nuc_pred, y_true, directory, idx):
     """
     Save plot to specified directory.
     """
     filename = os.path.join(directory, 'sample_plot.png')
 
-    idx = np.random.randint(1324)
+  
     plt.figure(figsize=(14, 14))
 
     plt.subplot(121)
@@ -125,7 +128,7 @@ def save_plot_to_file(nuc_pred, y_true, directory):
     plt.title('True Nuc')
     plt.imshow(y_true[idx, ...])
 
-    plt.savefig(filename)
+    plt.savefig(filename, bbox_inches='tight', dpi=1000)
     plt.close()
 
     print(f'Plot saved to {filename}')
@@ -143,6 +146,101 @@ def save_f1_scores_to_file(auto_f1, manual_f1, directory):
 
     print(f'F1 scores saved to {filename}')
 
+def lower_star_img(img):
+    """
+    Construct a lower star filtration on an image
+
+    Parameters
+    ----------
+    img: ndarray (M, N)
+        An array of single channel image data
+
+    Returns
+    -------
+    I: ndarray (K, 2)
+        A 0-dimensional persistence diagram corresponding to the sublevelset filtration
+    """
+    m, n = img.shape
+
+    idxs = np.arange(m * n).reshape((m, n))
+
+    I = idxs.flatten()
+    J = idxs.flatten()
+    V = img.flatten()
+
+    # Connect 8 spatial neighbors
+    tidxs = np.ones((m + 2, n + 2), dtype=np.int64) * np.nan
+    tidxs[1:-1, 1:-1] = idxs
+
+    tD = np.ones_like(tidxs) * np.nan
+    tD[1:-1, 1:-1] = img
+
+    for di in [-1, 0, 1]:
+        for dj in [-1, 0, 1]:
+
+            if di == 0 and dj == 0:
+                continue
+
+            thisJ = np.roll(np.roll(tidxs, di, axis=0), dj, axis=1)
+            thisD = np.roll(np.roll(tD, di, axis=0), dj, axis=1)
+            thisD = np.maximum(thisD, tD)
+
+            # Deal with boundaries
+            boundary = ~np.isnan(thisD)
+            thisI = tidxs[boundary]
+            thisJ = thisJ[boundary]
+            thisD = thisD[boundary]
+
+            I = np.concatenate((I, thisI.flatten()))
+            J = np.concatenate((J, thisJ.flatten()))
+            V = np.concatenate((V, thisD.flatten()))
+    sparseDM = sparse.coo_matrix((V, (I, J)), shape=(idxs.size, idxs.size))
+    print(sparseDM.shape)
+
+    return ripser(sparseDM, distance_matrix=True, maxdim=1)["dgms"]
+
+def plot_persistent_diagram(dgm, filename=None):
+    """
+    Plot the persistent diagram.
+    
+    If filename is provided, the plot will be saved to the filename.
+    """
+
+
+    print(dgm[0].shape)
+    plt.figure(figsize=(7,7))
+    dgm_0 = dgm[0]
+    dgm_0[np.logical_not(np.isfinite(dgm_0))] = 1
+    plt.scatter(dgm_0[:,0], dgm_0[:,1], marker= "+", label='0-dim features')
+
+    dgm_1 = dgm[1]
+    plt.scatter(dgm_1[:,0], dgm_1[:,1], marker= "x", label='1-dim features')
+
+    plt.plot(np.linspace(0,1), np.linspace(0,1))
+    plt.legend()
+
+    if filename:
+        plt.savefig(filename, bbox_inches='tight', dpi=1000)
+        plt.close()
+    else:
+        plt.show()
+    
+    return dgm_1
+
+def plot_die_places(nuc_pred, dgm_1, filename=None):
+    plt.figure()
+    cp = nuc_pred.copy()
+    for bth_v in dgm_1[:,0]:
+        if bth_v == 0:
+            continue
+        cp[cp == bth_v] = 1
+    plt.imshow(cp)
+
+    if filename:
+        plt.savefig(filename, bbox_inches='tight', dpi=1000)
+        plt.close()
+    else:
+        plt.show()
 
 def main():
     """
@@ -160,6 +258,11 @@ def main():
     manual_f1 = getf1(perc, rec)
     print(f'Mean F1 Score (Manual): {manual_f1}')
 
+    idx = np.random.randint(1324)
+    dgm = lower_star_img(nuc_pred[idx])
+    print(nuc_pred[idx])
+
+
     # Get the unique results directory only once
     save_results_directory = get_unique_foldername("/data1/temirlan/results")
     os.makedirs(save_results_directory)  # Create the directory here
@@ -169,8 +272,12 @@ def main():
     save_f1_scores_to_file(mean_f1, manual_f1, save_results_directory)
     
     # Saving plot to a file
-    save_plot_to_file(nuc_pred, y_true, save_results_directory)
+    save_plot_to_file(nuc_pred, y_true, save_results_directory, idx)
+    
+    dgm_1 = plot_persistent_diagram(dgm, filename=os.path.join(save_results_directory, 'persistent_diagram.png'))
+    plot_die_places(nuc_pred[idx], dgm_1, filename=os.path.join(save_results_directory, 'die_fig.png'))
 
 
 if __name__ == "__main__":
     main()
+
