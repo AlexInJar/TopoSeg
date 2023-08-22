@@ -23,7 +23,7 @@ def load_model():
     Load the model.
     """
     model = SwinUnet(num_classes=1)
-    chkpt_dir = '/data1/temirlan/experiments/nuc_test_07_26_2023_21_48_33/checkpoint-249.pth'
+    chkpt_dir = '/data1/temirlan/experiments/MSE 250 epoch/checkpoint-249.pth'
     checkpoint = torch.load(chkpt_dir)
     msg = model.load_state_dict(checkpoint['model'], strict=False)
     print(msg)
@@ -75,7 +75,7 @@ def run_model(model, Xtest, dataset_test):
     celres, nucres = np.zeros((len(dataset_test), 256, 256)), np.zeros((len(dataset_test), 256, 256))
 
     for i in tqdm(range(1324)):
-        nuc_ind = model(X[i:(i+1),...])
+        nuc_ind, _ = model(X[i:(i+1),...])
         nucres[i,...] = nuc_ind.detach()
 
     return celres, nucres, X
@@ -128,6 +128,7 @@ def main():
     dataset_test = create_dataset()
     Xtest, ytest = load_data(dataset_test)
     celres, nucres, X = run_model(model, Xtest, dataset_test)
+    np.save('./tmp_pred/nucres.npy', nucres)
     nuc_pred = watershed_postprocessing(nucres)
     save_results(nuc_pred, ytest, X)
 

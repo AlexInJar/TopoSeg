@@ -17,8 +17,9 @@ def load_predictions_and_labels():
     """
     nuc_pred = np.load('./tmp_pred/nucpred.npy')
     y_true = np.load('./tmp_pred/ytrue.npy')
+    nucres = np.load('./tmp_pred/nucres.npy')
 
-    return nuc_pred, y_true
+    return nuc_pred, y_true, nucres
 
 
 def calculate_metrics(pred, true):
@@ -225,11 +226,11 @@ def plot_persistent_diagram(dgm, filename=None):
     else:
         plt.show()
     
-    return dgm_1
+    return dgm_1, dgm_0
 
-def plot_die_places(nuc_pred, dgm_1, filename=None):
+def plot_die_places(nucres, dgm_1, filename=None):
     plt.figure()
-    cp = nuc_pred.copy()
+    cp = nucres.copy()
     for bth_v in dgm_1[:,0]:
         if bth_v == 0:
             continue
@@ -242,11 +243,27 @@ def plot_die_places(nuc_pred, dgm_1, filename=None):
     else:
         plt.show()
 
+def plot_die_places_2(nucres, dgm_0, filename=None):
+    plt.figure()
+    cp = nucres.copy()
+    for bth_v in dgm_0[:,0]:
+        if bth_v == 0:
+            continue
+        cp[cp == bth_v] = 1
+    plt.imshow(cp)
+
+    if filename:
+        plt.savefig(filename, bbox_inches='tight', dpi=1000)
+        plt.close()
+    else:
+        plt.show()
+
+
 def main():
     """
     Main function to load data, calculate metrics and plot a random sample.
     """
-    nuc_pred, y_true = load_predictions_and_labels()
+    nuc_pred, y_true, nucres = load_predictions_and_labels()
     df_nuc, stats_df = calculate_metrics(nuc_pred, y_true)
     print('\n')
 
@@ -259,8 +276,8 @@ def main():
     print(f'Mean F1 Score (Manual): {manual_f1}')
 
     idx = np.random.randint(1324)
-    dgm = lower_star_img(nuc_pred[idx])
-    print(nuc_pred[idx])
+    dgm = lower_star_img(nucres[idx])
+    print(nucres[idx])
 
 
     # Get the unique results directory only once
@@ -272,10 +289,11 @@ def main():
     save_f1_scores_to_file(mean_f1, manual_f1, save_results_directory)
     
     # Saving plot to a file
-    save_plot_to_file(nuc_pred, y_true, save_results_directory, idx)
+    save_plot_to_file(nucres, y_true, save_results_directory, idx)
     
-    dgm_1 = plot_persistent_diagram(dgm, filename=os.path.join(save_results_directory, 'persistent_diagram.png'))
-    plot_die_places(nuc_pred[idx], dgm_1, filename=os.path.join(save_results_directory, 'die_fig.png'))
+    dgm_1, dgm_0 = plot_persistent_diagram(dgm, filename=os.path.join(save_results_directory, 'persistent_diagram.png'))
+    plot_die_places(nucres[idx], dgm_1, filename=os.path.join(save_results_directory, 'die_fig_dgm_1.png'))
+    plot_die_places_2(nucres[idx], dgm_0, filename=os.path.join(save_results_directory, 'die_fig_dgm_0.png'))
 
 
 if __name__ == "__main__":

@@ -9,11 +9,11 @@ COMP_CNCT = ast.literal_eval(os.getenv('COMP_CNCT'))
 COMP_TAE = ast.literal_eval(os.getenv('COMP_TAE'))
 TAU = float(os.getenv('TAU'))
 
-lr = 1e-3* 32/256
+lr = 1e-3*32/256
 min_lr = 1e-6
 weight_decay = 0.05
 layer_decay = 0.75
-lmda1 = 5e-1 #topo_loss
+lmda1 = 5e-1 #topo_lossq
 lmda2 = 2e-5 #tae_loss
 lmda3 = 8.77e-7 #conn_loss
 
