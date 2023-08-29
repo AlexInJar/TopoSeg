@@ -9,17 +9,22 @@ import os
 import gudhi as gd
 from ripser import ripser
 from scipy import sparse
+from matplotlib.patches import Polygon
+import gudhi as gd
+import matplotlib.patches as patches
 
 
-def load_predictions_and_labels():
+def load_predictions_and_labels(idx):
     """
     Loads prediction and label numpy arrays from the file system.
     """
     nuc_pred = np.load('./tmp_pred/nucpred.npy')
     y_true = np.load('./tmp_pred/ytrue.npy')
+    y_x = np.load(f'/data1/temirlan/imgs/test/{idx}/nucinnd.npy')
     nucres = np.load('./tmp_pred/nucres.npy')
 
-    return nuc_pred, y_true, nucres
+
+    return nuc_pred, y_true, nucres, y_x
 
 
 def calculate_metrics(pred, true):
@@ -258,12 +263,50 @@ def plot_die_places_2(nucres, dgm_0, filename=None):
     else:
         plt.show()
 
+def visualize_rips_complex(image, radius, ax, threshold=0.1, downsample_rate=0.1):
+    # Apply thresholding
+    binary_image = (image > threshold).astype(int)
+    
+    # Convert image to point cloud
+    y, x = np.where(binary_image > 0)
+    data = np.column_stack([x, y])
+    
+    # Downsample the point cloud
+    num_points = len(data)
+    sampled_indices = np.random.choice(num_points, int(num_points * downsample_rate), replace=False)
+    sampled_data = data[sampled_indices]
+    
+    # Create a Rips complex
+    rips_complex = gd.RipsComplex(points=sampled_data, max_edge_length=radius)
+    simplex_tree = rips_complex.create_simplex_tree(max_dimension=2)
+    
+    # Plot the data points
+    ax.scatter(data[:, 0], data[:, 1], c='blue')
+    
+    # Plot the edges in the 1-skeleton
+    for simplex in simplex_tree.get_skeleton(1):
+        if len(simplex[0]) == 2:
+            point1, point2 = data[simplex[0][0]], data[simplex[0][1]]
+            ax.plot([point1[0], point2[0]], [point1[1], point2[1]], c='red')
+    
+    # Plot the 2-faces (shaded triangles)
+    for simplex in simplex_tree.get_skeleton(2):
+        if len(simplex[0]) == 3:
+            points = data[simplex[0]]
+            polygon = Polygon(points, closed=True, fill=True, edgecolor='purple', alpha=0.1)
+            ax.add_patch(polygon)
+    
+    # Plot circles of the given radius
+    for point in data:
+        circle = patches.Circle(point, radius, fill=False, edgecolor='green', linestyle='dotted')
+        ax.add_patch(circle)
 
 def main():
     """
     Main function to load data, calculate metrics and plot a random sample.
     """
-    nuc_pred, y_true, nucres = load_predictions_and_labels()
+    idx = np.random.randint(1324)
+    nuc_pred, y_true, nucres, y_x = load_predictions_and_labels(idx)
     df_nuc, stats_df = calculate_metrics(nuc_pred, y_true)
     print('\n')
 
@@ -275,7 +318,7 @@ def main():
     manual_f1 = getf1(perc, rec)
     print(f'Mean F1 Score (Manual): {manual_f1}')
 
-    idx = np.random.randint(1324)
+    
     dgm = lower_star_img(nucres[idx])
     print(nucres[idx])
 
@@ -294,6 +337,23 @@ def main():
     dgm_1, dgm_0 = plot_persistent_diagram(dgm, filename=os.path.join(save_results_directory, 'persistent_diagram.png'))
     plot_die_places(nucres[idx], dgm_1, filename=os.path.join(save_results_directory, 'die_fig_dgm_1.png'))
     plot_die_places_2(nucres[idx], dgm_0, filename=os.path.join(save_results_directory, 'die_fig_dgm_0.png'))
+
+    # Create a figure for Rips complex visualization
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 7))
+    
+    # Visualize Rips complex for input data y_x and output data nucres
+    visualize_rips_complex(y_x, radius=0.01, ax=ax1, threshold=0.4, downsample_rate=0.1)
+    ax1.set_title('Rips Complex for Input Data')
+    
+    visualize_rips_complex(nucres[idx], radius=0.01, ax=ax2, threshold=0.4, downsample_rate=0.1)
+    ax2.set_title('Rips Complex for Output Data')
+    
+    # Save the Rips complex plot
+    rips_complex_filename = os.path.join(save_results_directory, 'rips_complex.png')
+    plt.savefig(rips_complex_filename, bbox_inches='tight', dpi=1000)
+    plt.close()
+    
+    print(f'Rips complex plot saved to {rips_complex_filename}')
 
 
 if __name__ == "__main__":
