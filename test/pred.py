@@ -23,7 +23,7 @@ def load_model():
     Load the model.
     """
     model = SwinUnet(num_classes=1)
-    chkpt_dir = '/data1/temirlan/experiments/MSE 250 epoch/checkpoint-249.pth'
+    chkpt_dir = '/data1/temirlan/experiments/test_pretrained/checkpoint-249.pth'
     checkpoint = torch.load(chkpt_dir)
     msg = model.load_state_dict(checkpoint['model'], strict=False)
     print(msg)

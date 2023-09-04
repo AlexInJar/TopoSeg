@@ -13,10 +13,12 @@ from functions.load_data import load_data
 from functions.create_model import create_model
 from functions.load_checkpoint import load_checkpoint
 
+
+
 # This function creates a new directory for storing the output of the experiments.
 def prepare_directory():
     # Get current date and time
-    out_dir = f'/data1/shanru/experiments/{input("Enter Direction To Save ->>> ")}'  # Format as 'mm_dd_yyyy_HH_MM_SS'
+    out_dir = f'/data1/temirlan/experiments/{input("Enter Direction To Save ->>> ")}'  # Format as 'mm_dd_yyyy_HH_MM_SS'
     os.makedirs(out_dir, exist_ok=True)
     return out_dir
 
